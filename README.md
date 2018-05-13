@@ -8,7 +8,7 @@ All of my model will be compared to existing models from popular ML library (skl
     - [Random Forest Regressor](https://github.com/anhquan0412/basic_model_scratch/blob/master/random_forest_regressor.ipynb)
     - [Random Forest Classifier](https://github.com/anhquan0412/basic_model_scratch/blob/master/random_forest_classifier.ipynb)
 
-- [Pytorch Shallow Neural Network with custom Data Loader and some basic regularization technique](https://github.com/anhquan0412/basic_model_scratch/blob/master/NN_pytorch.ipynb)
+- [Pytorch Shallow Neural Network with custom Data Loader, some basic regularization technique and learning rate finder](https://github.com/anhquan0412/basic_model_scratch/blob/master/NN_pytorch.ipynb)
 
 
 TODO Convolutional Neural Network
