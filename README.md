@@ -8,12 +8,11 @@ All of my model will be compared to existing models from popular ML library (skl
     - [Random Forest Regressor](https://github.com/anhquan0412/basic_model_scratch/blob/master/random_forest_regressor.ipynb)
     - [Random Forest Classifier](https://github.com/anhquan0412/basic_model_scratch/blob/master/random_forest_classifier.ipynb)
 - [K Nearest Neighbors: supervised and unsupervised](https://github.com/anhquan0412/basic_model_scratch/blob/master/knn.ipynb)
-- [Pytorch Neural Network](https://github.com/anhquan0412/basic_model_scratch/blob/master/NN_pytorch.ipynbNN_pytorch.ipynb) with: 
+- [Pytorch Neural Network](https://github.com/anhquan0412/basic_model_scratch/blob/master/NN_pytorch.ipynb) with: 
 	- Custom Data Loader
 	- Data Augmentation on 1 channel image: torchvision vs fastai
 	- Shallow NN with batchnorm and dropout
 	- Learning rate finder
 - [Auto Encoding](https://github.com/anhquan0412/basic_model_scratch/blob/master/autoencoder.ipynb)
-- [Collaborative Filtering](https://github.com/anhquan0412/basic_model_scratch/blob/master/collab_filtering.ipynb) In progress
-
-TODO Recurrent Neural Network
+- [Collaborative Filtering](https://github.com/anhquan0412/basic_model_scratch/blob/master/collab_filtering.ipynb)
+- [Char RNN in Vietnamese](https://github.com/anhquan0412/basic_model_scratch/blob/,aster/rnn-vietnamese.ipynb)
