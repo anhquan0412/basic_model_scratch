@@ -27,7 +27,7 @@ def generate_linear_dataset(n,dim,noise_bound=0.5,is_reg=True):
 	'''
 	W = np.random.randn(dim+1,1) # including bias W0   
 	X = np.random.randn(n,dim)
-	X0 = np.array([[1]*n]).T # nx1
+	X0 = np.ones((n,1)) # nx1
 	X = np.concatenate((X0,X),axis=1) # including 1s column to simplify linear function
 
 	#add uniform random noise between -0.5 and 0.5
