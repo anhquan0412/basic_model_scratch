@@ -1,6 +1,9 @@
 from model.imports import *
 import matplotlib.pyplot as plt
 from model.activations import sigmoid
+from sklearn.tree import export_graphviz
+import re,IPython,graphviz
+import pandas as pd
 
 def get_train_val(X,y,val_ratio=0.2,shuffle=False):
 	n = X.shape[0]
@@ -38,5 +41,38 @@ def plot_learning_curve(train_losses,val_losses):
 	plt.plot(range(len(train_losses)),val_losses,'o-',color='g',label='Validation loss',markersize=1)
 	plt.legend(loc="best")
 	plt.show()
+
+def plot_feature_importances_rf(importances,col_names,figsize=(20,10)):
+	fea_imp_df = pd.DataFrame(data={'Feature':col_names,'Importance':importances}).set_index('Feature')
+	fea_imp_df = fea_imp_df.sort_values('Importance', ascending=True)
+	fea_imp_df.plot(kind='barh',figsize=figsize)
+	return fea_imp_df
+def permutation_importances(rf,X,y,metric,lowerisbetter=True):
+	baseline = metric(rf,X,y)
+	imp=[]
+	for col in X.columns:
+		save = X[col].copy()
+		X[col] = np.random.permutation(X[col])
+		m = metric(rf,X,y)
+		X[col] = save
+		if lowerisbetter:
+			imp.append(m-baseline)
+		else:
+			imp.append(baseline-m)
+	fea_imp = np.array(imp)
+
+	return plot_feature_importances_rf(fea_imp,X.columns.values)
+
+def draw_tree(t, df, size=10, ratio=0.6, precision=0):
+	""" Draws a representation of a random forest in IPython.
+	Parameters:
+	-----------
+	t: The tree you wish to draw
+	df: The data used to train the tree. This is used to get the names of the features.
+	"""
+	s=export_graphviz(t, out_file=None, feature_names=df.columns, filled=True,
+					  special_characters=True, rotate=True, precision=precision)
+	IPython.display.display(graphviz.Source(re.sub('Tree {',
+	   f'Tree {{ size={size}; ratio={ratio}', s)))
 
 

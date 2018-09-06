@@ -74,18 +74,18 @@ class CustomLinearModel():
 
 	def get_weight(self):
 		return self.W
-	def predict(self,X_test,thres=0.5):
-		if X_test.shape[1] == self.dim:
-			X0 = np.array([[1]*X_test.shape[0]]).T # nx1
-			X_test = np.concatenate((X0,X_test),axis=1)
-		y_pred= self.act_fn(np.squeeze(X_test @ self.W))
+	def predict(self,X,thres=0.5):
+		if X.shape[1] == self.dim:
+			X0 = np.array([[1]*X.shape[0]]).T # nx1
+			X = np.concatenate((X0,X),axis=1)
+		y_pred= self.act_fn(np.squeeze(X @ self.W))
 		if not self.is_reg:
 			y_pred = (y_pred >= thres).astype(np.uint8)
 		return y_pred
-	def predict_proba(self,X_test):
+	def predict_proba(self,X):
 		if self.is_reg:
 			raise Exception('Cannot predict probability for regression')
-		if X_test.shape[1] == self.dim:
-			X0 = np.array([[1]*X_test.shape[0]]).T # nx1
-			X_test = np.concatenate((X0,X_test),axis=1)
-		return self.act_fn(np.squeeze(X_test @ self.W))
+		if X.shape[1] == self.dim:
+			X0 = np.array([[1]*X.shape[0]]).T # nx1
+			X = np.concatenate((X0,X),axis=1)
+		return self.act_fn(np.squeeze(X @ self.W))
