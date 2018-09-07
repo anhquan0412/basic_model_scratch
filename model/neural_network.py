@@ -2,28 +2,42 @@ from model.imports import *
 from model.utils import get_train_val,batch_iterator,plot_learning_curve
 from model.metrics import MSE
 from model.gradients import MSE_grad
+from model.activations import softmax
 
 def initialize_weight(shape):
 	'''
 	Kaiming He normal initialization
 	'''
+	# add an extra row as bias
 	return np.random.rand(shape[0]+1,shape[1]) * np.sqrt(2/shape[0])
+	
 
 class CustomNeuralNetwork():
+	'''
+	Simple neural network for binary classification
+	'''
 	def __init__(self,layers,loss_fn,grad_fn,act_fn = lambda x: x):
 		self.act_fn,self.loss_fn,self.grad_fn = act_fn,loss_fn,grad_fn
 		self.weights = [initialize_weight((layers[i],layers[i+1])) for i in range(len(layers)-1)]
 		self.train_losses=[]
 		self.val_losses=[]
-	
-	def forward_pass(self,X,y):
 		self.X_inputs = []
+	def forward_pass(self,X,eval=False):
+
 		X_ones= np.ones([X.shape[0],1])
 		inp = X
-		for w in self.weights:
+		for i,w in enumerate(self.weights):
+			# add extra column to input to accommodate for weight bias
 			inp = np.concatenate((X_ones,inp),axis=1)
-			self.X_inputs.append(inp)
-			inp = self.act_fn(inp @ w)
+			if eval: self.X_inputs.append(inp)
+			if i!= len(self.weights)-1:
+				inp = self.act_fn(inp @ w)
+		
+		y_pred = softmax(inp @ self.weights[-1])
+		return y_pred
+
+	def backward_pass(self,y,y_pred):
+		
 	def fit_epoch(self,X,y,lr,epochs,bs,l2=0,val_ratio=0.2):
 		'''
 		Fit data using stochastic gradient descent and l2 regularization
@@ -52,8 +66,6 @@ class CustomNeuralNetwork():
 			print(f'Epoch {epoch+1}. Training loss: {self.train_losses[-1]}, Val loss:{self.val_losses[-1]}')
 		plot_learning_curve(self.train_losses,self.val_losses)
 
-	def get_weight(self):
-		return self.W
 	def predict(self,X,thres=0.5):
 		if X.shape[1] == self.dim:
 			X0 = np.array([[1]*X.shape[0]]).T # nx1
