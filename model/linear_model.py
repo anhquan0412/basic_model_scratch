@@ -1,4 +1,4 @@
-from model.imports import *
+import numpy as np
 from model.utils import get_train_val,batch_iterator,plot_learning_curve
 from model.metrics import MSE
 from model.gradients import MSE_grad

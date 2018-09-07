@@ -1,43 +1,49 @@
-from model.imports import *
+import numpy as np
 from model.utils import get_train_val,batch_iterator,plot_learning_curve
-from model.metrics import MSE
+from model.metrics import neg_multi_logloss
 from model.gradients import MSE_grad
-from model.activations import softmax
+from model.activation_classes import Softmax,ReLU,LeakyReLU
+from model.gradients import neg_logloss_softmax_grad
 
 def initialize_weight(shape):
 	'''
 	Kaiming He normal initialization
 	'''
-	# add an extra row as bias
-	return np.random.rand(shape[0]+1,shape[1]) * np.sqrt(2/shape[0])
+	return np.random.rand(shape[0],shape[1]) * np.sqrt(2/shape[0])
 	
 
 class CustomNeuralNetwork():
 	'''
 	Simple neural network for binary classification
 	'''
-	def __init__(self,layers,loss_fn,grad_fn,act_fn = lambda x: x):
-		self.act_fn,self.loss_fn,self.grad_fn = act_fn,loss_fn,grad_fn
-		self.weights = [initialize_weight((layers[i],layers[i+1])) for i in range(len(layers)-1)]
+	def __init__(self,layers,act_class):
+		self.act_class= act_class
+		self.weights = [[initialize_weight((layers[i],layers[i+1])) , 
+						initialize_weight((1,layers[i+1]))] for i in range(len(layers)-1)]
 		self.train_losses=[]
 		self.val_losses=[]
-		self.X_inputs = []
 	def forward_pass(self,X,eval=False):
-
-		X_ones= np.ones([X.shape[0],1])
+		self.X_inputs = [X]
 		inp = X
 		for i,w in enumerate(self.weights):
-			# add extra column to input to accommodate for weight bias
-			inp = np.concatenate((X_ones,inp),axis=1)
+			inp = inp @ w[0] + w[1]
 			if eval: self.X_inputs.append(inp)
-			if i!= len(self.weights)-1:
-				inp = self.act_fn(inp @ w)
+			if i<len(self.weights)-1: inp = self.act_class()(inp)
 		
-		y_pred = softmax(inp @ self.weights[-1])
-		return y_pred
+		#output layer
+		y_outp = Softmax()(inp)
+		return y_outp
 
-	def backward_pass(self,y,y_pred):
-		
+	def backward_pass(self,y,y_pred,l2):
+		# assuming we have 2 weights with shape (400,200) and (200,10)
+		# grad of rightmost layer
+		bs = len(y)
+		grad_wrt_input = neg_logloss_softmax_grad(y,y_pred) # (n,10)
+		grad_wbias = (1/bs) * grad_wrt_input
+		grad_w = (1/bs) * self.X_inputs[-1].T @ grad_wrt_input # (200,10)
+		grad_w += (l2/bs) * 
+		# TODO: add l2
+		self.X_inputs=[]
 	def fit_epoch(self,X,y,lr,epochs,bs,l2=0,val_ratio=0.2):
 		'''
 		Fit data using stochastic gradient descent and l2 regularization
@@ -47,19 +53,15 @@ class CustomNeuralNetwork():
 			train_cumloss,val_cumloss = 0,0
 			# get batch from train set
 			for xb,yb in batch_iterator(X_train,y_train,bs):
-				y_pred = self.act_fn(np.squeeze(xb @ self.W))
-				train_cumloss+= self.loss_fn(yb,y_pred) * len(xb)
+				y_pred = self.forward_pass(xb)
+				train_cumloss+= -1 * neg_multi_logloss(yb,y_pred) * len(xb)
 
-				grad = self.grad_fn(yb,y_pred)
-				grad_w = xb.T @ grad
-				if len(grad_w.shape)==1: grad_w = grad_w[:,None]
-				grad_w[1:,:]+= 2*(l2/len(xb))*self.W[1:,:]
-				self.W-= lr*grad_w 
+				self.backward_pass(yb,y_pred,l2)
 
 			# get double of bs from validation set (since there's less calculation for prediction)
 			for xb,yb in batch_iterator(X_val,y_val,bs*2):
-				y_pred = self.act_fn(np.squeeze(xb @ self.W))
-				val_cumloss += self.loss_fn(yb,y_pred) * len(xb)
+				y_pred = self.forward_pass(xb,eval=True)
+				val_cumloss += -1 * neg_multi_logloss(yb,y_pred) * len(xb)
 
 			self.train_losses.append(train_cumloss/ len(X_train))
 			self.val_losses.append(val_cumloss / len(X_val))

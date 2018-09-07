@@ -1,10 +1,15 @@
-from model.imports import *
+import numpy as np
 import matplotlib.pyplot as plt
 from model.activations import sigmoid
 from sklearn.tree import export_graphviz
 import re,IPython,graphviz
 import pandas as pd
 
+
+
+def onehot_array(x):
+	n_values = np.max(x)+1
+	return np.eye(n_values)[x]
 def get_train_val(X,y,val_ratio=0.2,shuffle=False):
 	n = X.shape[0]
 	if shuffle:
