@@ -7,9 +7,8 @@ import pandas as pd
 
 
 
-def onehot_array(x):
-	n_values = np.max(x)+1
-	return np.eye(n_values)[x]
+def onehot_array(x,n_class):
+	return np.eye(n_class)[x]
 def get_train_val(X,y,val_ratio=0.2,shuffle=False):
 	n = X.shape[0]
 	if shuffle:

@@ -8,7 +8,11 @@ class Sigmoid():
 
 class Softmax():
 	def __call__(self,x):
-		return np.exp(x) / np.sum(np.exp(x), axis=1)[:,None]
+		# return np.exp(x) / np.sum(np.exp(x), axis=1)[:,None]
+
+		#this is more stable. Avoid np.exp overflow problem
+		e_x = np.exp(x - np.max(x, axis=-1, keepdims=True))
+		return e_x / np.sum(e_x, axis=-1, keepdims=True)
 
 class ReLU():
 	def __call__(self, x):

@@ -12,7 +12,6 @@ def logloss_sigmoid_grad(y,y_pred):
 	'''
 	return MSE_grad(y,y_pred)/2
 
-def neg_logloss_softmax_grad(y,y_pred):
-	y_onehot = onehot_array(y)
-	# gradient of neg log loss is positive
-	return (-1)* y_onehot * (y_pred-1)
+def logloss_softmax_grad(y,y_pred):
+	y_onehot = onehot_array(y,y_pred.shape[1])
+	return y_pred - y_onehot
