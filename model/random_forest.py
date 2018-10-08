@@ -13,7 +13,7 @@ class RandomForest():
 		self.is_reg = is_reg
 
 	def create_tree(self,is_reg,min_leaf,max_features):
-		# generate random idxs with size sample_sz
+		# generate random idxs with size sample_sz. Thus this model is not suitable for time-related dataset
 		sample_idxs = np.random.permutation(len(self.y))[:self.sample_sz]
 		return DecisionTreeNode(self.X[sample_idxs,:], self.y[sample_idxs], is_reg,min_leaf,max_features)
 	def predict(self, X,thres=0.5):
@@ -46,21 +46,25 @@ class DecisionTreeNode():
 		self.lhs_tree_node = None
 		self.rhs_tree_node = None
 		
-		self.find_varsplit() # find best split and populate lhs + rhs tree
+		self.find_varsplit() # find best split and populate lhs + rhs tree node
 
 		
 	def find_varsplit(self):
+		# exit clause when best split has been made from parent node
+		if len(np.unique(self.y)) == 1: return
+
 		# Assuming max_feature = self.c, as we consider all features for splitting
 		n_col = int(self.c*self.max_features)
+
 		for i in np.random.permutation(n_col): 
 			self.find_best_split_reg(i) if self.is_reg else self.find_best_split_clas(i)
-		if self.is_leaf: return
+		if self.is_leaf: return # exit clause when no split is made, because of min_leaf
 		split_col = self.split_col
 		lhs_idx = np.nonzero(split_col<=self.split_value)[0]
 		rhs_idx = np.nonzero(split_col>self.split_value)[0]
 		
-		self.lhs_tree = DecisionTreeNode(self.X[lhs_idx,:], self.y[lhs_idx],self.is_reg,self.min_leaf,self.max_features)
-		self.rhs_tree = DecisionTreeNode(self.X[rhs_idx,:], self.y[rhs_idx],self.is_reg,self.min_leaf,self.max_features)
+		self.lhs_tree_node = DecisionTreeNode(self.X[lhs_idx,:], self.y[lhs_idx],self.is_reg,self.min_leaf,self.max_features)
+		self.rhs_tree_node = DecisionTreeNode(self.X[rhs_idx,:], self.y[rhs_idx],self.is_reg,self.min_leaf,self.max_features)
 
 	def find_best_split_reg(self, col_idx): 
 		x = self.X[:,col_idx]
@@ -113,14 +117,15 @@ class DecisionTreeNode():
 		return self.X[:,self.col_idx]
 
 	@property
-	def is_leaf(self): return self.score == float('inf')
+	def is_leaf(self):
+		return self.score == float('inf')
 	
 	#prediction
 	def predict(self,X):
 		return np.array([self.predict_row(xi) for xi in X])
 	def predict_row(self,xi):
 		if self.is_leaf: return self.val
-		subtree = self.lhs_tree if xi[self.col_idx]<=self.split_value else self.rhs_tree
+		subtree = self.lhs_tree_node if xi[self.col_idx]<=self.split_value else self.rhs_tree_node
 		return subtree.predict_row(xi)
 	
 	def __repr__(self):
