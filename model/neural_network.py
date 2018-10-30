@@ -9,6 +9,7 @@ def init_weight(shape):
 	'''
 	Kaiming He normal initialization
 	'''
+	np.random.seed(42)
 	return [np.random.uniform(size=shape) * np.sqrt(2/shape[0]), np.zeros((1,shape[1]))]
 
 class CustomNeuralNetwork():
@@ -29,14 +30,18 @@ class CustomNeuralNetwork():
 		self.train_losses=[]
 		self.val_losses=[]
 		self.X_inputs=[]
+		self.X_acts=[]
 	def forward_pass(self,X,train):
-		if train: self.X_inputs = [X]
+		if train: 
+			self.X_inputs = [X]
+			self.X_acts= [X]
 		inp = X
 		for i,w in enumerate(self.weights):
 			inp = inp @ w[0] + w[1]
 			if i<len(self.weights)-1:
 				if train: self.X_inputs.append(inp) 
 				inp = self.act_obj(inp)
+				if train: self.X_acts.append(inp)
 		
 		#output layer
 		y_outp = Softmax()(inp)
@@ -48,31 +53,33 @@ class CustomNeuralNetwork():
 		bs = len(y)
 		grad_wrt_input = logloss_softmax_grad(y,y_pred) # (n,10)
 
-		grad_wbias = (1/bs) * np.sum(grad_wrt_input,axis=0) # (1,10)
+		grad_wbias = np.sum(grad_wrt_input,axis=0) # (1,10)
 
-		grad_w = (1/bs) * self.X_inputs[-1].T @ grad_wrt_input # (200,10)
+		grad_w = self.X_acts[-1].T @ grad_wrt_input # (200,10)
 		grad_w += (l2/bs) * self.weights[-1][0] # l2 reg
 		
 		self.weights[-1][0]-= lr*grad_w #update weight
 		self.weights[-1][1]-= lr*grad_wbias #update bias
 
 		for i in range(len(self.weights)-2,-1,-1):
-			grad_wrt_input = grad_wrt_input @ self.weights[i+1][0].T #(n,200)
-			grad_wrt_input = grad_wrt_input * self.act_obj.grad(self.X_inputs[i+1]) 
+			grad_wrt_input = grad_wrt_input @ self.weights[i+1][0].T #(n,200) # this is grad_wrt_activation
+			grad_wrt_input = grad_wrt_input * self.act_obj.grad(self.X_inputs[i+1]) # this is grad_wrt_input
 
-			grad_wbias = (1/bs) * np.sum(grad_wrt_input,axis=0) # (1,200)
+			grad_wbias = np.sum(grad_wrt_input,axis=0) # (1,200)
 
-			temp = self.X_inputs[i].T if i==0 else self.act_obj(self.X_inputs[i]).T # (400,n)
-			grad_w = (1/bs) * temp @ grad_wrt_input # (400,200)
+			grad_w = self.X_acts[i].T @ grad_wrt_input # (400,200)
 			grad_w+= (l2/bs) * self.weights[i][0] # l2 reg
 
 			self.weights[i][0]-= lr*grad_w #update weight
 			self.weights[i][1]-= lr*grad_wbias #update bias
+		
 		self.X_inputs=[]
+		self.X_acts=[]
 	def fit_epoch(self,X_train,y_train,X_val,y_val,lr,epochs,bs,l2=0):
 		'''
 		Fit data using stochastic gradient descent and l2 regularization
 		'''
+		# set_trace()
 		for epoch in range(epochs):
 			# set_trace()
 			train_cumloss,val_cumloss = 0,0

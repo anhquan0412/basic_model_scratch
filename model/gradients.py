@@ -14,4 +14,4 @@ def logloss_sigmoid_grad(y,y_pred):
 
 def logloss_softmax_grad(y,y_pred):
 	y_onehot = onehot_array(y,y_pred.shape[1])
-	return y_pred - y_onehot
+	return (1/len(y_pred)) * (y_pred - y_onehot)
