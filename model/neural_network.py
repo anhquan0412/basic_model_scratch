@@ -39,16 +39,14 @@ class CustomNeuralNetwork():
 
 		assert len(self.act_objs) == len(self.keep_probs),'# of activation objs and # of keep probs must be equal'
 		assert len(self.act_objs) == len(layers)-2, 'We only need (# of hidden layers) activation objects'
-		self.train_losses=[]
-		self.val_losses=[]
-		self.X_inputs=[]
-		self.X_acts=[]
-		self.X_masks=[]
+		
+		# class params
+		self.train_losses,self.val_losses=[],[]
+		self.X_inputs,self.X_acts,self.X_masks=[],[],[]
+
 	def forward_pass(self,X,train):
 		if train: 
-			self.X_inputs = [X]
-			self.X_acts= [X]
-			self.X_masks = []
+			self.X_inputs,self.X_acts,self.X_masks = [X],[X],[]
 		inp = X
 		for i,w in enumerate(self.weights):
 			inp = inp @ w[0] + w[1]
@@ -93,9 +91,7 @@ class CustomNeuralNetwork():
 
 			self.weights[i][0]-= lr*grad_w #update weight
 			self.weights[i][1]-= lr*grad_wbias #update bias
-		
-		self.X_inputs=[]
-		self.X_acts=[]
+
 	def fit_epoch(self,X_train,y_train,X_val,y_val,lr,epochs,bs,l2=0):
 		'''
 		Fit data using stochastic gradient descent and l2 regularization
