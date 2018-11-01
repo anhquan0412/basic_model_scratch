@@ -12,36 +12,56 @@ def init_weight(shape):
 	np.random.seed(42)
 	return [np.random.uniform(size=shape) * np.sqrt(2/shape[0]), np.zeros((1,shape[1]))]
 
+
+def drop_out(X_act,keep_prob):
+	'''
+	Inverted dropout implementation
+	'''
+	mask = np.random.rand(*X_act.shape) <= keep_prob
+	X_act= (X_act*mask)/keep_prob
+	return X_act,mask
 class CustomNeuralNetwork():
 	'''
 	Simple neural network for binary classification
 	'''
-	def __init__(self,layers,act_obj):
+	def __init__(self,layers,act_obj,keep_prob=1.0):
 		'''
 		Layers include output layer 
-		i.e for 10 output classification, input layer size 400 and 1 hideen layer size 200: [400,200,10]
+		E.g for 10 output classification, input layer size 400 and 1 hidden layer size 200: [400,200,10]
 
-		act_obj: object from activation_classes module. I.e Softmax() or ReLU()
+		act_obj: object (or list of objects) from activation_classes module to apply before reaching each hidden layer (exclude the last SoftMax activation before loss calculation)
+		keep_prob: keep probability (or list) for drop out at each hidden layer. Note that we don't drop out the first layer
 		'''
-		self.act_obj= act_obj
-		
+		self.act_objs= [act_obj]*(len(layers)-2) if type(act_obj)!=list else act_obj
+		self.keep_probs = [keep_prob]*(len(layers)-2) if type(keep_prob)!=list else keep_prob
 		# list of [weight,bias]
 		self.weights = [init_weight((layers[i],layers[i+1])) for i in range(len(layers)-1)]
+
+		assert len(self.act_objs) == len(self.keep_probs),'# of activation objs and # of keep probs must be equal'
+		assert len(self.act_objs) == len(layers)-2, 'We only need (# of hidden layers) activation objects'
 		self.train_losses=[]
 		self.val_losses=[]
 		self.X_inputs=[]
 		self.X_acts=[]
+		self.X_masks=[]
 	def forward_pass(self,X,train):
 		if train: 
 			self.X_inputs = [X]
 			self.X_acts= [X]
+			self.X_masks = []
 		inp = X
 		for i,w in enumerate(self.weights):
 			inp = inp @ w[0] + w[1]
 			if i<len(self.weights)-1:
 				if train: self.X_inputs.append(inp) 
-				inp = self.act_obj(inp)
-				if train: self.X_acts.append(inp)
+				#activation
+				inp = self.act_objs[i](inp)				
+				if train:
+					#dropout
+					inp,mask = drop_out(inp,self.keep_probs[i])
+					self.X_masks.append(mask)
+					# note that this activation inp already includes dropout
+					self.X_acts.append(inp)
 		
 		#output layer
 		y_outp = Softmax()(inp)
@@ -62,8 +82,9 @@ class CustomNeuralNetwork():
 		self.weights[-1][1]-= lr*grad_wbias #update bias
 
 		for i in range(len(self.weights)-2,-1,-1):
-			grad_wrt_input = grad_wrt_input @ self.weights[i+1][0].T #(n,200) # this is grad_wrt_activation
-			grad_wrt_input = grad_wrt_input * self.act_obj.grad(self.X_inputs[i+1]) # this is grad_wrt_input
+			grad_wrt_input = grad_wrt_input @ self.weights[i+1][0].T #(n,200) # this is grad_wrt to (activation->dropout)
+			grad_wrt_input = grad_wrt_input * self.X_masks[i] / self.keep_probs[i] # grad_wrt_activation, after factoring in the inverted dropout
+			grad_wrt_input = grad_wrt_input * self.act_objs[i].grad(self.X_inputs[i+1]) # actual grad_wrt_input
 
 			grad_wbias = np.sum(grad_wrt_input,axis=0) # (1,200)
 
@@ -81,7 +102,6 @@ class CustomNeuralNetwork():
 		'''
 		# set_trace()
 		for epoch in range(epochs):
-			# set_trace()
 			train_cumloss,val_cumloss = 0,0
 			# get batch from train set
 			for xb,yb in batch_iterator(X_train,y_train,bs):
