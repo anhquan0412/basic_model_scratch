@@ -13,9 +13,10 @@ My model implementations will be compared to existing models from popular ML lib
 - [Neural network for classification](https://github.com/anhquan0412/basic_model_scratch/blob/master/scratch_neural_net.ipynb)
 	- Stochastic Gradient Descent
 	- Multiple hidden layers
-	- Variety of activation functions + gradients (Sigmoid, Softmax, ReLU ...)
+	- Variety of activation functions + gradients (Sigmoid, Softmax, ReLU ...) customized for each hidden layer
 	- L2 regularization
-	- TODO: batchnorm, dropout, dynamic learning rate optimizer (momentum and adagrad)
+	- Dropout
+	- TODO: batchnorm, dynamic learning rate optimizer (momentum and adagrad)
 
 The following notebooks uses Pytorch libraries so they are not implemented from scratch. However, I try not to use any high level Pytorch function
 - [Pytorch Neural Network](https://github.com/anhquan0412/basic_model_scratch/blob/master/NN_pytorch.ipynb) with: 
