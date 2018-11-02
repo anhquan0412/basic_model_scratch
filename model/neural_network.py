@@ -5,6 +5,8 @@ from model.gradients import MSE_grad
 from model.activation_classes import Softmax,ReLU,LeakyReLU
 from model.gradients import logloss_softmax_grad
 from IPython.core.debugger import set_trace
+from model.optimizers import GradientDescent
+
 def init_weight(shape):
 	'''
 	Kaiming He normal initialization
@@ -24,7 +26,7 @@ class CustomNeuralNetwork():
 	'''
 	Simple neural network for binary classification
 	'''
-	def __init__(self,layers,act_obj,keep_prob=1.0):
+	def __init__(self,layers,act_obj,opt= GradientDescent,keep_prob=1.0):
 		'''
 		Layers include output layer 
 		E.g for 10 output classification, input layer size 400 and 1 hidden layer size 200: [400,200,10]
@@ -36,7 +38,7 @@ class CustomNeuralNetwork():
 		self.keep_probs = [keep_prob]*(len(layers)-2) if type(keep_prob)!=list else keep_prob
 		# list of [weight,bias]
 		self.weights = [init_weight((layers[i],layers[i+1])) for i in range(len(layers)-1)]
-
+		self.opt = opt(layers)
 		assert len(self.act_objs) == len(self.keep_probs),'# of activation objs and # of keep probs must be equal'
 		assert len(self.act_objs) == len(layers)-2, 'We only need (# of hidden layers) activation objects'
 		
@@ -65,7 +67,10 @@ class CustomNeuralNetwork():
 		y_outp = Softmax()(inp)
 		return y_outp
 
-	def backward_pass(self,y,y_pred,l2,lr):
+	def backward_pass(self,y,y_pred,l2,lr,**kwargs):
+		'''
+		kwargs should only contain beta1 (adam,rmsprop) and/or beta2 (adam)
+		'''
 		# assuming we have 2 weights with shape (400,200) and (200,10)
 		# grad of rightmost layer
 		bs = len(y)
@@ -76,6 +81,8 @@ class CustomNeuralNetwork():
 		grad_w = self.X_acts[-1].T @ grad_wrt_input # (200,10)
 		grad_w += (l2/bs) * self.weights[-1][0] # l2 reg
 		
+		#optimizer
+		grad_w,grad_wbias = self.opt.step(grad_w,grad_wbias,-1,**kwargs)
 		self.weights[-1][0]-= lr*grad_w #update weight
 		self.weights[-1][1]-= lr*grad_wbias #update bias
 
@@ -89,10 +96,11 @@ class CustomNeuralNetwork():
 			grad_w = self.X_acts[i].T @ grad_wrt_input # (400,200)
 			grad_w+= (l2/bs) * self.weights[i][0] # l2 reg
 
+			grad_w,grad_wbias = self.opt.step(grad_w,grad_wbias,i,**kwargs)
 			self.weights[i][0]-= lr*grad_w #update weight
 			self.weights[i][1]-= lr*grad_wbias #update bias
 
-	def fit_epoch(self,X_train,y_train,X_val,y_val,lr,epochs,bs,l2=0):
+	def fit_epoch(self,X_train,y_train,X_val,y_val,lr,epochs,bs=64,l2=0,beta1=0.9,beta2=0.99):
 		'''
 		Fit data using stochastic gradient descent and l2 regularization
 		'''
@@ -104,7 +112,7 @@ class CustomNeuralNetwork():
 				y_pred = self.forward_pass(xb,True)
 				train_cumloss+= multi_logloss(yb,y_pred) * len(xb)
 
-				self.backward_pass(yb,y_pred,l2,lr)
+				self.backward_pass(yb,y_pred,l2,lr,beta1=beta1,beta2=beta2)
 
 			# get double of bs from validation set (since there's less calculation for prediction)
 			for xb,yb in batch_iterator(X_val,y_val,bs*2):
