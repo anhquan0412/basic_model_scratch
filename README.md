@@ -16,7 +16,8 @@ My model implementations will be compared to existing models from popular ML lib
 	- Variety of activation functions + gradients (Sigmoid, Softmax, ReLU ...) customized for each hidden layer
 	- L2 regularization
 	- Dropout
-	- TODO: batchnorm, dynamic learning rate optimizer (momentum and adagrad)
+	- Dynamic learning rate optimizer (momentum, RMSProp and Adam)
+    - TODO: batchnorm
 
 The following notebooks uses Pytorch libraries so they are not implemented from scratch. However, I try not to use any high level Pytorch function
 - [Pytorch Neural Network](https://github.com/anhquan0412/basic_model_scratch/blob/master/NN_pytorch.ipynb) with: 
