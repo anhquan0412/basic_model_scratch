@@ -2,7 +2,7 @@
 
 Update: Code implementations have been moved to python module. Notebook will only show results and model comparison
 
-To refresh my knowledge and prepare for any upcoming ML interview, I will attempt to implement some basic machine learning algorithms from scratch using only python and limited numpy/panda function.
+To refresh my knowledge, I will attempt to implement some basic machine learning algorithms from scratch using only python and limited numpy/pandas function.
 My model implementations will be compared to existing models from popular ML library (sklearn)
 - [Linear Regression with weight decay (L2 regularization)](https://github.com/anhquan0412/basic_model_scratch/blob/master/linear_regression.ipynb)
 - [Logistic Regression with weight decay](https://github.com/anhquan0412/basic_model_scratch/blob/master/logistic_regression.ipynb)
@@ -16,7 +16,7 @@ My model implementations will be compared to existing models from popular ML lib
 	- Variety of activation functions + gradients (Sigmoid, Softmax, ReLU ...) customized for each hidden layer
 	- L2 regularization
 	- Dropout
-	- Dynamic learning rate optimizer (momentum, RMSProp and Adam)
+	- [Dynamic learning rate optimizer](https://github.com/anhquan0412/basic_model_scratch/blob/master/neural_net_optimizers.ipynb) (momentum, RMSProp and Adam)
     - TODO: batchnorm
 
 The following notebooks uses Pytorch libraries so they are not implemented from scratch. However, I try not to use any high level Pytorch function
