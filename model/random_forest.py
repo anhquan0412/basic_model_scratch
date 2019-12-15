@@ -13,7 +13,7 @@ class RandomForest():
 		self.is_reg = is_reg
 
 	def create_tree(self,is_reg,min_leaf,max_features):
-		# generate random idxs with size sample_sz. Thus this model is not suitable for time-related dataset
+		# generate random idxs with size sample_sz
 		sample_idxs = np.random.permutation(len(self.y))[:self.sample_sz]
 		return DecisionTreeNode(self.X[sample_idxs,:], self.y[sample_idxs], is_reg,min_leaf,max_features)
 	def predict(self, X,thres=0.5):

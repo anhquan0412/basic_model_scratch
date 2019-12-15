@@ -94,10 +94,9 @@ class CustomNeuralNetwork():
 			grad_wbias = np.sum(grad_wrt_input,axis=0) # (1,200)
 
 			grad_w = self.X_acts[i].T @ grad_wrt_input # (400,200)
-			grad_w+= (l2/bs) * self.weights[i][0] # l2 reg
 
 			grad_w,grad_wbias = self.opt.step(grad_w,grad_wbias,i,**kwargs)
-			self.weights[i][0]-= lr*grad_w #update weight
+			self.weights[i][0]-= lr*(grad_w + (l2/bs) * self.weights[i][0]) #update weight
 			self.weights[i][1]-= lr*grad_wbias #update bias
 
 	def fit_epoch(self,X_train,y_train,X_val,y_val,lr,epochs,bs=64,l2=0,beta1=0.9,beta2=0.99):
